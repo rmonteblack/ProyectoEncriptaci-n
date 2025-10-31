@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Generar / Cargar claves</h2>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="post" action="{{ url_for('main.keys') }}">
+      <div class="mb-3">
+        <label for="alg" class="form-label">Algoritmo</label>
+        <select id="alg" name="algorithm" class="form-select">
+          <option value="RSA">RSA (recomendado 2048/3072)</option>
+          <option value="ECC">ECC (P-256)</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="size" class="form-label">Tamaño clave (solo RSA)</label>
+        <input id="size" name="key_size" type="number" class="form-control" value="2048">
+      </div>
+
+      <button class="btn btn-success" type="submit" name="action" value="generate">Generar par de claves</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h5>Operaciones de claves</h5>
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('main.keys') }}">
+      <div class="mb-3">
+        <label class="form-label">Cargar clave privada (.pem)</label>
+        <input type="file" name="private_key_file" class="form-control">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Cargar clave pública (.pem)</label>
+        <input type="file" name="public_key_file" class="form-control">
+      </div>
+      <button class="btn btn-primary" type="submit" name="action" value="upload">Cargar claves</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

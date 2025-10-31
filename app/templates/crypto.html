@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Cifrar / Descifrar</h2>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>Cifrar (usar clave pública)</h5>
+        <form method="post" action="{{ url_for('main.crypto_page') }}">
+          <div class="mb-3">
+            <label class="form-label">Mensaje de texto</label>
+            <textarea name="plaintext" class="form-control" rows="6"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">O archivo de texto</label>
+            <input type="file" name="file" class="form-control">
+          </div>
+          <button class="btn btn-success" type="submit" name="action" value="encrypt">Cifrar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>Texto cifrado</h5>
+        <textarea class="form-control" rows="10" readonly>{{ encrypted_text|default('') }}</textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5>Descifrar (usar clave privada)</h5>
+        <form method="post" action="{{ url_for('main.crypto_page') }}">
+          <div class="mb-3">
+            <label class="form-label">Texto cifrado (base64)</label>
+            <textarea name="ciphertext" class="form-control" rows="6"></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit" name="action" value="decrypt">Descifrar</button>
+        </form>
+
+        <div class="mt-3">
+          <label class="form-label">Texto descifrado</label>
+          <textarea class="form-control" rows="4" readonly>{{ decrypted_text|default('') }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

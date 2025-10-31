@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Firmar / Verificar</h2>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>Firmar (clave privada)</h5>
+        <form method="post" action="{{ url_for('main.sign_page') }}">
+          <div class="mb-3">
+            <label class="form-label">Mensaje o archivo</label>
+            <textarea name="msg_to_sign" class="form-control" rows="6"></textarea>
+            <input type="file" name="file_to_sign" class="form-control mt-2">
+          </div>
+          <button class="btn btn-success" type="submit" name="action" value="sign">Firmar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>Resultado de la firma</h5>
+        <textarea class="form-control" rows="6" readonly>{{ signature|default('') }}</textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5>Verificar firma (clave pública)</h5>
+        <form method="post" action="{{ url_for('main.sign_page') }}">
+          <div class="mb-3">
+            <label class="form-label">Mensaje</label>
+            <textarea name="msg_to_verify" class="form-control" rows="4"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Firma (base64)</label>
+            <textarea name="signature_input" class="form-control" rows="3"></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit" name="action" value="verify">Verificar</button>
+        </form>
+
+        <div class="mt-3">
+          <p>Estado: <strong>{{ verify_status|default('—') }}</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
