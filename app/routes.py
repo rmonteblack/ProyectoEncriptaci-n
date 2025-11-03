@@ -1,6 +1,7 @@
 # app/routes.py
 import os
-from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, send_file
+import base64
+from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from werkzeug.utils import secure_filename
 
 from . import crypto
@@ -59,10 +60,8 @@ def keys():
             pub_file = request.files.get('public_key_file')
             try:
                 if priv_file and priv_file.filename:
-                    filename = secure_filename(priv_file.filename)
                     data = priv_file.read()
-                    # guardar en el folder, adivinar si RSA o EC por el encabezado
-                    # heurística simple: buscar 'RSA' o 'EC' en PEM header
+                    # heurística simple: buscar 'RSA' en PEM header para decidir ubicación
                     if b'RSA' in data:
                         out = os.path.join(folder, RSA_PRIV)
                     else:
@@ -70,7 +69,6 @@ def keys():
                     crypto.save_key_to_file(out, data)
                     flash(f'Clave privada cargada y guardada como {os.path.basename(out)}', 'success')
                 if pub_file and pub_file.filename:
-                    filename = secure_filename(pub_file.filename)
                     data = pub_file.read()
                     if b'RSA' in data:
                         out = os.path.join(folder, RSA_PUB)
@@ -101,8 +99,10 @@ def crypto_page():
     decrypted_text = ''
     if request.method == 'POST':
         action = request.form.get('action')
+        # asegurar algoritmo por defecto RSA si no se envía
         alg = request.form.get('algorithm', 'RSA')
-        # encrypt
+
+        # --- ENCRYPT ---
         if action == 'encrypt':
             # read plaintext from textarea or file
             plaintext = None
@@ -110,7 +110,7 @@ def crypto_page():
                 plaintext = request.form.get('plaintext').encode('utf-8')
             elif 'file' in request.files and request.files['file']:
                 f = request.files['file']
-                if f and allowed_text_file(f.filename):
+                if f and f.filename and allowed_text_file(f.filename):
                     plaintext = f.read()
                 else:
                     flash('Archivo no permitido o vacío (solo .txt)', 'warning')
@@ -141,6 +141,7 @@ def crypto_page():
             except Exception as e:
                 flash(f'Error al cifrar: {str(e)}', 'danger')
 
+        # --- DECRYPT ---
         elif action == 'decrypt':
             b64_ct = request.form.get('ciphertext')
             if not b64_ct:
@@ -148,14 +149,14 @@ def crypto_page():
                 return redirect(url_for('main.crypto_page'))
 
             try:
-                if request.form.get('algorithm') == 'RSA':
+                if alg == 'RSA':
                     priv_path = os.path.join(folder, RSA_PRIV)
                     if not os.path.exists(priv_path):
                         flash('No se encontró clave privada RSA. Genérala o súbela.', 'danger')
                         return redirect(url_for('main.crypto_page'))
                     priv_pem = crypto.load_pem_file(priv_path)
                     priv = crypto.load_private_key(priv_pem)
-                    decrypted_text = crypto.rsa_decrypt(priv, b64_ct).decode('utf-8')
+                    plaintext_bytes = crypto.rsa_decrypt(priv, b64_ct)
                 else:
                     priv_path = os.path.join(folder, EC_PRIV)
                     if not os.path.exists(priv_path):
@@ -163,7 +164,14 @@ def crypto_page():
                         return redirect(url_for('main.crypto_page'))
                     priv_pem = crypto.load_pem_file(priv_path)
                     priv = crypto.load_private_key(priv_pem)
-                    decrypted_text = crypto.ec_decrypt(priv, b64_ct).decode('utf-8')
+                    plaintext_bytes = crypto.ec_decrypt(priv, b64_ct)
+
+                # intentar decodificar a UTF-8; si no es texto, mostrar base64 del contenido
+                try:
+                    decrypted_text = plaintext_bytes.decode('utf-8')
+                except UnicodeDecodeError:
+                    decrypted_text = "[AVISO: contenido no UTF-8] Base64: " + base64.b64encode(plaintext_bytes).decode('utf-8')
+
                 flash('Descifrado correcto.', 'success')
             except Exception as e:
                 flash(f'Error al descifrar: {str(e)}', 'danger')
@@ -189,7 +197,7 @@ def sign_page():
                 msg = request.form.get('msg_to_sign').encode('utf-8')
             elif 'file_to_sign' in request.files and request.files['file_to_sign']:
                 f = request.files['file_to_sign']
-                if f and allowed_text_file(f.filename):
+                if f and f.filename and allowed_text_file(f.filename):
                     msg = f.read()
                 else:
                     flash('Archivo no permitido o vacío (solo .txt)', 'warning')

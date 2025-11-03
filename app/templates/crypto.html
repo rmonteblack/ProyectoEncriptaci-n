@@ -7,15 +7,25 @@
     <div class="card mb-3">
       <div class="card-body">
         <h5>Cifrar (usar clave pública)</h5>
-        <form method="post" action="{{ url_for('main.crypto_page') }}">
+        <form method="post" action="{{ url_for('main.crypto_page') }}" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label">Algoritmo</label>
+            <select name="algorithm" class="form-select">
+              <option value="RSA">RSA (OAEP)</option>
+              <option value="ECC">ECC (P-256, ECDH+AES-GCM)</option>
+            </select>
+          </div>
+
           <div class="mb-3">
             <label class="form-label">Mensaje de texto</label>
-            <textarea name="plaintext" class="form-control" rows="6"></textarea>
+            <textarea name="plaintext" class="form-control" rows="6" placeholder="Escribe aquí el texto a cifrar (o sube un .txt)"></textarea>
           </div>
+
           <div class="mb-3">
-            <label class="form-label">O archivo de texto</label>
-            <input type="file" name="file" class="form-control">
+            <label class="form-label">O archivo de texto (.txt)</label>
+            <input type="file" name="file" class="form-control" accept=".txt,text/plain">
           </div>
+
           <button class="btn btn-success" type="submit" name="action" value="encrypt">Cifrar</button>
         </form>
       </div>
@@ -26,7 +36,10 @@
     <div class="card mb-3">
       <div class="card-body">
         <h5>Texto cifrado</h5>
-        <textarea class="form-control" rows="10" readonly>{{ encrypted_text|default('') }}</textarea>
+        <textarea class="form-control" rows="10" readonly id="encryptedOutput">{{ encrypted_text|default('') }}</textarea>
+        <div class="mt-2">
+          <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyToClipboard('encryptedOutput')">Copiar</button>
+        </div>
       </div>
     </div>
 
@@ -35,18 +48,41 @@
         <h5>Descifrar (usar clave privada)</h5>
         <form method="post" action="{{ url_for('main.crypto_page') }}">
           <div class="mb-3">
-            <label class="form-label">Texto cifrado (base64)</label>
-            <textarea name="ciphertext" class="form-control" rows="6"></textarea>
+            <label class="form-label">Algoritmo</label>
+            <select name="algorithm" class="form-select">
+              <option value="RSA">RSA (OAEP)</option>
+              <option value="ECC">ECC (P-256, ECDH+AES-GCM)</option>
+            </select>
           </div>
+
+          <div class="mb-3">
+            <label class="form-label">Texto cifrado (pega aquí el Base64 o paquete)</label>
+            <textarea name="ciphertext" class="form-control" rows="6" placeholder="Pega el texto cifrado (Base64) generado arriba"></textarea>
+          </div>
+
           <button class="btn btn-primary" type="submit" name="action" value="decrypt">Descifrar</button>
         </form>
 
         <div class="mt-3">
           <label class="form-label">Texto descifrado</label>
-          <textarea class="form-control" rows="4" readonly>{{ decrypted_text|default('') }}</textarea>
+          <textarea class="form-control" rows="4" readonly id="decryptedOutput">{{ decrypted_text|default('') }}</textarea>
+          <div class="mt-2">
+            <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyToClipboard('decryptedOutput')">Copiar</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+function copyToClipboard(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.select();
+  document.execCommand('copy');
+  // mensaje breve
+  alert('Copiado al portapapeles.');
+}
+</script>
 {% endblock %}
