@@ -8,7 +8,7 @@ from . import crypto
 
 bp = Blueprint('main', __name__)
 
-# Filenames fijos (puedes cambiarlos o hacer gestión por usuario más adelante)
+# Filenames fijos
 RSA_PRIV = "private_rsa.pem"
 RSA_PUB = "public_rsa.pem"
 EC_PRIV = "private_ec.pem"
@@ -55,13 +55,12 @@ def keys():
                 flash(f'Error al generar claves: {str(e)}', 'danger')
 
         elif action == 'upload':
-            # upload private and public files if provided
             priv_file = request.files.get('private_key_file')
             pub_file = request.files.get('public_key_file')
             try:
                 if priv_file and priv_file.filename:
                     data = priv_file.read()
-                    # heurística simple: buscar 'RSA' en PEM header para decidir ubicación
+                    #buscar 'RSA' en PEM header para decidir ubicación
                     if b'RSA' in data:
                         out = os.path.join(folder, RSA_PRIV)
                     else:
@@ -81,7 +80,7 @@ def keys():
 
         return redirect(url_for('main.keys'))
 
-    # GET: mostrar estado de claves
+    #mostrar estado de claves
     keys_present = {
         'rsa_priv': os.path.exists(os.path.join(folder, RSA_PRIV)),
         'rsa_pub': os.path.exists(os.path.join(folder, RSA_PUB)),
@@ -104,7 +103,7 @@ def crypto_page():
 
         # --- ENCRYPT ---
         if action == 'encrypt':
-            # read plaintext from textarea or file
+            # leer texto o archivo
             plaintext = None
             if request.form.get('plaintext'):
                 plaintext = request.form.get('plaintext').encode('utf-8')
@@ -166,7 +165,7 @@ def crypto_page():
                     priv = crypto.load_private_key(priv_pem)
                     plaintext_bytes = crypto.ec_decrypt(priv, b64_ct)
 
-                # intentar decodificar a UTF-8; si no es texto, mostrar base64 del contenido
+                # intentar decodificar a UTF-8, si no es texto, mostrar base64 del contenido
                 try:
                     decrypted_text = plaintext_bytes.decode('utf-8')
                 except UnicodeDecodeError:
@@ -191,7 +190,7 @@ def sign_page():
         alg = request.form.get('algorithm', 'RSA')
 
         if action == 'sign':
-            # read message or file
+            # igual leer mensaje o archivo
             msg = None
             if request.form.get('msg_to_sign'):
                 msg = request.form.get('msg_to_sign').encode('utf-8')

@@ -2,7 +2,7 @@ from flask import Flask
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
-    # configuración por defecto; override en instance/config.py
+    # configuración por defecto: override en instance/config.py
     app.config.from_mapping(
         SECRET_KEY='dev-key-change-me',
         UPLOAD_FOLDER='uploads',
